@@ -1,9 +1,9 @@
 ---
-name: wechat-control
-description: WeChat remote control — enable/disable remote Claude Code session control from WeChat
+name: wechat-claude-handoff
+description: WeChat Claude Handoff — hand off your current Claude Code session to WeChat and take it back seamlessly
 ---
 
-# wechat-control Skill
+# wechat-claude-handoff Skill
 
 Seamlessly hand off your terminal Claude Code session to WeChat, or take it back.
 

@@ -23,6 +23,7 @@ mkdir -p "${DATA_DIR}"
 # Copy source files
 cp "${REPO_DIR}/src/wechat-control.mjs"     "${SKILL_DIR}/src/"
 cp "${REPO_DIR}/src/context-collector.mjs"  "${SKILL_DIR}/src/"
+cp "${REPO_DIR}/src/permission-queue.mjs"   "${SKILL_DIR}/src/"
 
 # Copy skill definition
 cp "${REPO_DIR}/SKILL.md" "${SKILL_DIR}/"

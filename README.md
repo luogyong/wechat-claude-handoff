@@ -1,4 +1,4 @@
-# WeChat Remote Control for Claude Code
+# wechat-claude-handoff
 
 > 让你的 Claude Code 会话在终端和微信之间无缝切换。
 
@@ -9,14 +9,56 @@
 
 ---
 
+## 🔥 与 wechat-claude-code 的两大关键区别
+
+如果你已经了解 [wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code)，以下是 **你必须知道** 的两个核心差异：
+
+### 1. 🪟 Windows 用户开箱即用
+
+wechat-claude-code 官方推荐的启动命令为 `npm run daemon -- start`。
+
+**这个命令在 Windows 上无法工作。** 它依赖 Unix 的 daemon 进程机制，Windows 没有等效实现。许多 Windows 用户在这一步卡住，不知道如何启动服务。
+
+wechat-control 为 Windows 用户提供了完整的 **PM2** 替代方案：
+- 用 `pm2 start` 管理桥接服务进程
+- 通过 `pm2-windows-service` 一键配置 **开机自启动**
+- 重启电脑后服务自动恢复，无需手动干预
+
+> 详见 [安装 → 设置开机自动启动](#1-安装-wechat-claude-code-桥接服务)
+
+### 2. 🔗 接管当前会话，而非另起新对话
+
+这是 wechat-control 解决的核心痛点。
+
+| 能力 | wechat-claude-code 原生 | wechat-control |
+|------|--------------------------|----------------|
+| 微信端对话 | **另起新的 Claude 会话** | **接管桌面端当前会话** |
+| 上下文 | 全新的，不知道终端在做什么 | 自动采集终端上下文（分支、文件等） |
+| 工作流 | 两个独立对话，各自为政 | 同一对话，双向同步 |
+| 回到终端 | 需要手动翻阅微信记录 | 自动生成对话镜像，一键恢复 |
+
+**具体来说：** 你在桌面端重构代码到一半，想用手机继续——如果直接用 wechat-claude-code，微信端的 Claude 是一个空白新对话，完全不知道你在做什么。而 wechat-control 的 `/wechat-control-on` 会**接管当前会话**：自动采集 Git 状态、最近文件、项目信息注入微信端，让 Claude 无缝接续你在桌面端的工作。
+
+```text
+[原生 wechat-claude-code]
+桌面端会话 A ←─ 割裂 ─→ 微信端会话 B（全新对话，无上下文）
+
+[wechat-control 加持后]
+桌面端会话 A ←─ 同一条 ─→ 微信端接管会话 A（自动同步上下文）
+```
+
+---
+
 ## 目录
 
+- [🔥 与 wechat-claude-code 的两大关键区别](#-与-wechat-claude-code-的两大关键区别)
 - [为什么需要这个](#为什么需要这个)
 - [工作原理](#工作原理)
 - [前置条件](#前置条件)
-- [安装](#安装)
+- [🚀 快速安装](#-快速安装)
+- [手动安装](#手动安装)
   - [1. 安装 wechat-claude-code 桥接服务](#1-安装-wechat-claude-code-桥接服务)
-  - [2. 安装 wechat-control 工具集](#2-安装-wechat-control-工具集)
+  - [2. 安装 wechat-claude-handoff 工具集](#2-安装-wechat-claude-handoff-工具集)
   - [3. 配置 Claude Code 命令](#3-配置-claude-code-命令)
 - [快速开始](#快速开始)
 - [命令参考](#命令参考)
@@ -27,6 +69,7 @@
   - [紧急修复模式](#紧急修复模式)
   - [巡检模式](#巡检模式)
 - [文件结构](#文件结构)
+- [权限确认队列（串行化）](#权限确认队列串行化)
 - [高级用法](#高级用法)
   - [编程集成](#编程集成)
   - [实时查看镜像](#实时查看镜像)
@@ -108,7 +151,7 @@
 
 ## 前置条件
 
-`wechat-control` 本身不处理微信协议——它依赖于 [wechat-claude-code](https://github.com/your-org/wechat-claude-code) 桥接服务。两种安装方式的区别：
+`wechat-control` 本身不处理微信协议——它依赖于 [wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code) 桥接服务。两种安装方式的区别：
 
 | 组件 | 作用 | 必须？ |
 |------|------|--------|
@@ -123,11 +166,35 @@
 
 ---
 
-## 安装
+## 🚀 快速安装
+
+**把下面这段话复制给 Claude Code，它会自动完成全部安装：**
+
+> 请帮我安装 wechat-claude-handoff（一个微信远程控制 Claude Code 的工具）。
+>
+> 步骤：
+>
+> 1. 克隆 <https://github.com/luogyong/wechat-claude-handoff> 到 ~/.claude/skills/wechat-claude-handoff
+> 2. 运行其中的 install.sh
+> 3. 克隆 <https://github.com/Wechat-ggGitHub/wechat-claude-code> 到 ~/.claude/skills/wechat-claude-code
+> 4. 进入 wechat-claude-code 目录，执行 npm install，然后 npm run setup（扫码绑定微信）
+> 5. 用 PM2 启动桥接服务：pm2 start dist/main.js --name wechat-claude-code && pm2 save
+> 6. 如果是 Windows，配置 pm2-windows-service 实现开机自启动
+> 7. 完成后运行 node ~/.claude/skills/wechat-claude-handoff/src/wechat-control.mjs status 确认状态
+>
+> 安装完成后，在终端或微信端输入 `/wechat-control-on` 均可开启远程控制，离开电脑后通过微信继续当前会话。
+
+---
+
+## 手动安装
 
 ### 1. 安装 wechat-claude-code 桥接服务
 
 此仓库**不包含**微信协议部分。你需要先安装桥接服务：
+
+> ⚠️ **Windows 用户特别注意**：wechat-claude-code 官方文档中使用的启动命令为
+> `npm run daemon -- start`，但该命令依赖 Unix daemon 机制，**在 Windows 上无法工作**。
+> Windows 用户必须使用 PM2 来管理桥接服务进程。请按以下步骤操作：
 
 ```bash
 # 进入项目目录
@@ -139,19 +206,45 @@ npm install
 # 首次运行 setup 扫码绑定微信
 npm run setup
 
-# 启动 PM2 守护进程
+# 启动 PM2 守护进程（Windows 必须用此方式）
 pm2 start dist/main.js --name wechat-claude-code
 pm2 save
 ```
 
-> 详细步骤请参考 [wechat-claude-code](https://github.com/your-org/wechat-claude-code) 文档。
+**设置开机自动启动（Windows）：**
 
-### 2. 安装 wechat-control 工具集
+PM2 支持配置为 Windows 服务，实现开机自启动：
+
+```bash
+# 1. 安装 pm2-windows-service（需管理员权限运行 PowerShell/CMD）
+npm install -g pm2-windows-service
+
+# 2. 安装 Windows 服务
+pm2-service-install -n "PM2"
+
+# 3. 保存当前进程列表（确保 wechat-claude-code 已在运行）
+pm2 save
+
+# 4. 启动 Windows 服务
+net start PM2
+```
+
+> 此后每次开机，PM2 会自动启动并恢复所有已保存的进程（包括 wechat-claude-code）。
+>
+> **macOS/Linux 用户**：使用 `pm2 startup` 命令即可：
+> ```bash
+> pm2 startup
+> pm2 save
+> ```
+>
+> 详细步骤请参考 [wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code) 文档。
+
+### 2. 安装 wechat-claude-handoff 工具集
 
 **方式 A：克隆仓库（推荐）**
 
 ```bash
-git clone https://github.com/your-org/wechat-control.git
+git clone https://github.com/luogyong/wechat-claude-handoff.git
 cd wechat-control
 ./install.sh
 ```
@@ -394,7 +487,8 @@ F:\program\github\wechat-control/          # 本仓库
 ├── .gitignore
 ├── src/
 │   ├── wechat-control.mjs                 # ⭐ 核心控制脚本
-│   └── context-collector.mjs              # 上下文自动采集
+│   ├── context-collector.mjs              # 上下文自动采集
+│   └── permission-queue.mjs               # 🔔 串行权限确认队列
 └── .claude/
     └── commands/
         ├── wechat-control-on.md           # 开启命令
@@ -422,6 +516,85 @@ F:\program\github\wechat-control/          # 本仓库
 ├── sessions/                               # 会话数据（由桥接管理）
 └── logs/                                   # 运行日志（由桥接管理）
 ```
+
+---
+
+## 权限确认队列（串行化）
+
+### 问题背景
+
+Claude Code 有时会在短时间内连续触发多个权限确认请求（例如连续写文件、执行命令）。默认行为下，这些请求会**同时**推送到微信，导致：
+
+- 用户来不及回复第一条，第二条已弹出
+- 第一条超时或被覆盖，导致确权失败
+- Claude Code 任务中断
+
+### 解决方案：`permission-queue.mjs`
+
+`src/permission-queue.mjs` 实现了一个**文件级串行队列**：
+
+- 同一时刻只有**一条**权限请求处于"活跃"状态（已发送到微信、等待回复）
+- 后续权限请求自动排入队列，等当前请求被确认后再发送下一条
+- 超过 **60 秒**未手动确认时，自动默认 **Yes**，并继续处理队列中的下一条
+
+### 队列文件
+
+`~/.wechat-claude-code/permission-queue.json`
+
+```json
+{
+  "pending": [
+    { "id": "uuid", "prompt": "Allow write to /etc/hosts?", "queued_at": "..." }
+  ],
+  "active": {
+    "id": "uuid",
+    "prompt": "Allow npm install?",
+    "sent_at": "...",
+    "timeout_seconds": 60
+  },
+  "last_result": {
+    "id": "uuid",
+    "decision": "yes",
+    "decided_at": "...",
+    "auto": false
+  }
+}
+```
+
+### 桥接集成方式
+
+wechat-claude-code 桥接服务在收到权限请求时调用：
+
+```bash
+# 入队一条权限请求（自动激活或排队）
+node permission-queue.mjs enqueue "Allow file write to /tmp/foo?"
+
+# 返回值 (JSON):
+# { "action": "send_to_wechat", "item": { ... } }   ← 立即发送到微信
+# { "action": "queued", "id": "...", "position": 2 } ← 已入队，等待
+
+# 微信用户回复后调用
+node permission-queue.mjs respond yes
+node permission-queue.mjs respond no
+
+# 桥接每 5s 定时调用（处理超时 + 促发下一条）
+node permission-queue.mjs tick
+
+# 查看当前队列状态
+node permission-queue.mjs status
+
+# 重置队列（调试用）
+node permission-queue.mjs clear
+```
+
+### 超时自动 Yes
+
+当 `tick` 检测到活跃请求已超过 60 秒无响应时：
+
+1. 自动将该请求标记为 `decision: "yes"`, `auto: true`
+2. 将结果写入 `last_result`
+3. 立即从 `pending` 中促发下一条（如有）
+4. 返回 `{ "action": "timeout_auto_yes", ... }`，桥接可据此通知 Claude Code 继续执行
 
 ---
 
@@ -478,7 +651,7 @@ watch -n 2 'echo "🔄 远程控制: $(test -f ~/.wechat-claude-code/wechat-cont
 1. 终端需要执行敏感操作（写文件、运行命令）
 2. 权限请求发到微信端
 3. 你回复 `y`（允许）或 `n`（拒绝）
-4. 60 秒超时自动拒绝
+4. 60 秒超时自动批准
 
 使用 `/approve on` 开启审批模式（默认仅通知）。
 
@@ -578,6 +751,9 @@ node src/context-collector.mjs [cwd] > ~/.wechat-claude-code/context-sync.md
 | 微信协议 | ❌ 不需要 | ✅ 必须 |
 | Claude SDK | ❌ 不需要 | ✅ 必须 |
 
+> 关于两大关键区别（Windows PM2 替代方案、会话接管 vs 另起新对话）的详细说明，
+> 请参见文档开头的 [🔥 与 wechat-claude-code 的两大关键区别](#-与-wechat-claude-code-的两大关键区别)。
+
 **简单说：** wechat-control 是"遥控器"，wechat-claude-code 是"电视机"。遥控器不能独立工作，但有遥控器才能远程控制。
 
 ---
@@ -609,22 +785,18 @@ node src/wechat-control.mjs off
 
 ## 更新日志
 
-### v3.0 (2026-06-11)
-- ✅ 微信端直接触发远程控制（`/wechat-control-on` 等）
-- ✅ 自动上下文采集（`context-collector.mjs`）
+### v0.1.0 (2026-06-12)
+
+首次发布 wechat-claude-handoff。
+
+- ✅ 双向开关控制（`/wechat-control-on/off`）
+- ✅ 自动上下文采集（Git 分支、最近文件、项目信息）
 - ✅ 智能会话摘要（关闭时显示最近交互）
 - ✅ PM2 进程健康检查
 - ✅ 美化的状态输出（emoji + 表格）
-- ✅ 首次提取为独立仓库
-
-### v2.0 (2026-06-07)
-- ✅ 增强错误处理
-- ✅ 智能摘要提取
-- ✅ JSON 元数据存储
-
-### v1.0 (2026-06-07)
-- 基础的 on/off 开关
-- 简单的 mirror 和 context-sync 机制
+- 🔔 串行权限确认队列（`permission-queue.mjs`）— 防止多权限同时推送，60s 超时自动 Yes
+- 🪟 Windows 用户完整的 PM2 + 开机自启动方案
+- 🔗 接管桌面端当前会话，而非另起新对话
 
 ---
 
@@ -636,7 +808,7 @@ node src/wechat-control.mjs off
 
 ## 相关资源
 
-- [wechat-claude-code](https://github.com/your-org/wechat-claude-code) — 微信桥接服务（必要依赖）
+- [wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code) — 微信桥接服务（必要依赖）
 - [Claude Code](https://claude.ai/code) — Anthropic 的终端 AI 助手
 - [PM2](https://pm2.keymetrics.io/) — Node.js 进程管理
 
