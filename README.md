@@ -11,7 +11,7 @@
 
 ## 🔥 与 wechat-claude-code 的两大关键区别
 
-如果你已经了解 [wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code)，以下是 **你必须知道** 的两个核心差异：
+如果你已经了解 [wechat-claude-code](https://github.com/luogyong/wechat-claude-code)（增强 fork），以下是 **你必须知道** 的两个核心差异：
 
 ### 1. 🪟 Windows 用户开箱即用
 
@@ -151,7 +151,7 @@ wechat-control 为 Windows 用户提供了完整的 **PM2** 替代方案：
 
 ## 前置条件
 
-`wechat-control` 本身不处理微信协议——它依赖于 [wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code) 桥接服务。两种安装方式的区别：
+`wechat-control` 本身不处理微信协议——它依赖于 [wechat-claude-code](https://github.com/luogyong/wechat-claude-code)（增强 fork）桥接服务。两种安装方式的区别：
 
 | 组件 | 作用 | 必须？ |
 |------|------|--------|
