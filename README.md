@@ -176,7 +176,7 @@ wechat-control 为 Windows 用户提供了完整的 **PM2** 替代方案：
 >
 > 1. 克隆 <https://github.com/luogyong/wechat-claude-handoff> 到 ~/.claude/skills/wechat-claude-handoff
 > 2. 运行其中的 install.sh
-> 3. 克隆 <https://github.com/Wechat-ggGitHub/wechat-claude-code> 到 ~/.claude/skills/wechat-claude-code
+> 3. 克隆 <https://github.com/luogyong/wechat-claude-code>（增强 fork，含 wechat-control 集成优化）到 ~/.claude/skills/wechat-claude-code
 > 4. 进入 wechat-claude-code 目录，执行 npm install，然后 npm run setup（扫码绑定微信）
 > 5. 用 PM2 启动桥接服务：pm2 start dist/main.js --name wechat-claude-code && pm2 save
 > 6. 如果是 Windows，配置 pm2-windows-service 实现开机自启动
@@ -237,7 +237,7 @@ net start PM2
 > pm2 save
 > ```
 >
-> 详细步骤请参考 [wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code) 文档。
+> 详细步骤请参考 [wechat-claude-code](https://github.com/luogyong/wechat-claude-code)（增强 fork）文档。
 
 ### 2. 安装 wechat-claude-handoff 工具集
 
@@ -809,6 +809,7 @@ node src/wechat-control.mjs off
 ## 相关资源
 
 - [wechat-claude-code](https://github.com/Wechat-ggGitHub/wechat-claude-code) — 微信桥接服务（必要依赖）
+- [wechat-claude-code (增强 fork)](https://github.com/luogyong/wechat-claude-code) — 含 wechat-control 集成优化、cwd 同步、增强上下文采集
 - [Claude Code](https://claude.ai/code) — Anthropic 的终端 AI 助手
 - [PM2](https://pm2.keymetrics.io/) — Node.js 进程管理
 
