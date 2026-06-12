@@ -14,7 +14,7 @@ Disable WeChat remote control mode. This:
 
 1. **Run the control script**:
    ```bash
-   node path/to/wechat-control/src/wechat-control.mjs off
+   node ~/.claude/skills/wechat-control/src/wechat-control.mjs off
    ```
    The script will automatically show a summary of the last 3 exchanges from the WeChat session.
 

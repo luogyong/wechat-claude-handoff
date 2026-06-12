@@ -11,7 +11,7 @@ Check whether WeChat remote control is active and the overall system health.
 
 1. **Run the control script**:
    ```bash
-   node path/to/wechat-control/src/wechat-control.mjs status
+   node ~/.claude/skills/wechat-control/src/wechat-control.mjs status
    ```
 
    The output shows:

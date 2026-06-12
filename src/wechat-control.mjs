@@ -25,6 +25,7 @@ import { execSync } from 'node:child_process';
 
 const DATA_DIR = join(homedir(), '.wechat-claude-code');
 const FLAG = join(DATA_DIR, 'wechat-control.flag');
+const APPROVAL_FLAG = join(DATA_DIR, 'approval-mode');
 const MIRROR = join(DATA_DIR, 'terminal-mirror.md');
 const CONTEXT_SYNC = join(DATA_DIR, 'context-sync.md');
 
@@ -100,6 +101,7 @@ if (cmd === 'on') {
   writeFileSync(FLAG, JSON.stringify({
     enabled_at: new Date().toISOString(),
     enabled_from_cwd: process.cwd(),
+// Enable approval mode (terminal permission-broker waits for WeChat responses)  writeFileSync(APPROVAL_FLAG, new Date().toISOString());
   }, null, 2));
 
   // Initialize mirror with header
@@ -131,9 +133,10 @@ if (cmd === 'on') {
     process.exit(0);
   }
 
-  // Remove flag
+  // Remove flags
   try {
     unlinkSync(FLAG);
+    try { unlinkSync(APPROVAL_FLAG); } catch {}
   } catch (err) {
     console.error(`❌ 无法删除 flag 文件: ${err.message}`);
     process.exit(1);
@@ -186,6 +189,7 @@ if (cmd === 'on') {
 
   console.log('📁 文件状态:');
   console.log(`   Flag:    ${existsSync(FLAG) ? '✅' : '❌'} ${FLAG}`);
+  console.log("   Approval: " + (existsSync(APPROVAL_FLAG) ? "✅" : "❌") + " " + APPROVAL_FLAG);
   console.log(`   Mirror:  ${existsSync(MIRROR) ? '✅' : '❌'} ${MIRROR}`);
   console.log(`   Context: ${existsSync(CONTEXT_SYNC) ? '✅' : '❌'} ${CONTEXT_SYNC}`);
   console.log('');

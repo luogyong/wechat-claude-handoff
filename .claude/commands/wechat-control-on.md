@@ -14,12 +14,12 @@ Enable WeChat remote control mode. This:
 
 1. **Run the control script**:
    ```bash
-   node path/to/wechat-control/src/wechat-control.mjs on
+   node ~/.claude/skills/wechat-control/src/wechat-control.mjs on
    ```
 
 2. **Auto-generate context sync file** (recommended):
    ```bash
-   node path/to/wechat-control/src/context-collector.mjs [cwd] > ~/.wechat-claude-code/context-sync.md
+   node ~/.claude/skills/wechat-control/src/context-collector.mjs [cwd] > ~/.wechat-claude-code/context-sync.md
    ```
 
 3. **Confirm to the user**:
